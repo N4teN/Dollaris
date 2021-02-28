@@ -23,6 +23,13 @@ namespace Dollaris {
         messageReceived: [] as MessageReceivedEvent[],
         messageReceivedAny: [] as MessageReceivedEvent[],
     }
+    
+    // Hacky proxy to get module data easily
+    export let data = new Proxy({}, {
+        get (target, property, receiver) {
+            return modules.find(x => x.name == property)?.data;
+        }
+    }) as { [key: string]: any };
 
     /// Intercepts
     let xhrSend = window.XMLHttpRequest.prototype.send;
@@ -91,7 +98,7 @@ namespace Dollaris {
     
     /// System Methods
     /** Saves settings and module data to local storage. */
-    function save() {
+    export function save() {
         let modulesData: any = {};
         for (let module of modules)
             modulesData[module.name] = module.data;
@@ -110,12 +117,12 @@ namespace Dollaris {
         }
     }
 
-    function enableModule(module: Module) {
+    export function enableModule(module: Module) {
         for (let handler in module.events)
             (events as any)[handler].push((module.events as any)[handler]);
     }
 
-    function disableModule(module: Module) {
+    export function disableModule(module: Module) {
         for (let handler in module.events)
             (events as any)[handler] = (events as any)[handler].filter((x: any) => x !== (module.events as any)[handler])
     }
@@ -124,29 +131,11 @@ namespace Dollaris {
         for (let handler of (events as any)[event])
             handler(args);
     };
-    
-    // Hacky proxy to get module data easily
-    let data = new Proxy({}, {
-        get (target, property, receiver) {
-            return modules.find(x => x.name == property)?.data;
-        }
-    }) as { [key: string]: any };
 
     /// Outwards interaction
-    function sendMessage(message: string, to?: string, url?: string) {
-        $.post("", { message, to, url });
-    }
-
-    function kick(user: string) {
-        $.post("", { kick: user });
-    }
-
-    function ban(user: string) {
-        $.post("", { ban_user: user });
-    }
-
-    function reportAndBan(user: string) {
-        $.post("", { report_and_ban_user: user });
-    }
+    export function sendMessage(message: string, to?: string, url?: string) { $.post("", { message, to, url }); }
+    export function kick(user: string) { $.post("", { kick: user }); }
+    export function ban(user: string) { $.post("", { ban_user: user }); }
+    export function reportAndBan(user: string) { $.post("", { report_and_ban_user: user }); }
 }
 
